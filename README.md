@@ -19,7 +19,7 @@ you want to get updates, you can watch this repository.
 
 * [X] Sort of working: Being able to compile and link a simple project with multiple files and include headers.
 * [X] Incremental builds: The entire program shouldn't be recompiled every time a single file is changed.
-* [ ] Custom compiler flags: The programmer should be able to customize the compiler flags through `Seastar.toml` without needing to change the build/run commands.
+* [X] Custom compiler flags: The programmer should be able to customize the compiler flags through `Seastar.toml` without needing to change the build/run commands.
 * [ ] Parallel builds: Compiling in parallel is faster and more efficient.
 * [ ] C++ support: Seastar should be able to compile and link C++ without changing options or difficult configuration.
 * [ ] Rust support: Seastar should be able to compile and link Rust without changing options or difficult configuration.

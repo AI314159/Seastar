@@ -6,6 +6,15 @@ use walkdir::WalkDir;
 pub struct Config {
     pub project_name: String,
     pub compiler: String,
+    pub options: Options,
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct Options {
+    #[serde(default)]
+    pub c_flags: String,
+    #[serde(default)]
+    pub link_flags: String,
 }
 
 pub fn load_config<P: Into<PathBuf>>(path: P) -> Config {
