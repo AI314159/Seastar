@@ -1,0 +1,10 @@
+# Configuration file.
+# Pretty simple at the moment, but should get a lot better soon.
+
+
+# Project name has effect only on the name of the generated binary
+project_name = "example"
+
+# This compiler will be invoked internally.
+# This can be changed here, most compilers support the same set of flags.
+compiler = "clang"

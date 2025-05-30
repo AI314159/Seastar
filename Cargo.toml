@@ -1,0 +1,10 @@
+[package]
+name = "seastar"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+indicatif = "0.17.11"
+serde = { version = "1.0.219", features = ["derive"] }
+toml = "0.8.22"
+walkdir = "2.5.0"
