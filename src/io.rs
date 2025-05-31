@@ -1,11 +1,12 @@
 use serde::Deserialize;
 use std::{fs, path::PathBuf};
-use walkdir::WalkDir;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
     pub project_name: String,
     pub compiler: String,
+    #[serde(default)]
+    pub cpp_compiler: Option<String>,
     pub options: Options,
 }
 
@@ -15,6 +16,11 @@ pub struct Options {
     pub c_flags: String,
     #[serde(default)]
     pub link_flags: String,
+
+    #[serde(default)]
+    pub cpp_flags: Option<String>,
+    #[serde(default)]
+    pub cpp_link_flags: Option<String>,
 }
 
 pub fn load_config<P: Into<PathBuf>>(path: P) -> Config {
@@ -22,12 +28,19 @@ pub fn load_config<P: Into<PathBuf>>(path: P) -> Config {
     toml::from_str(&data).expect("Failed to parse TOML")
 }
 
-pub fn get_c_files(src_dir: &str) -> Vec<PathBuf> {
+pub fn get_source_files(src_dir: &str, exts: &[&str]) -> Vec<PathBuf> {
+    use walkdir::WalkDir;
     WalkDir::new(src_dir)
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_file())
-        .filter(|e| e.path().extension().map_or(false, |ext| ext == "c"))
+        .filter(|e| {
+            e.path()
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .map(|ext| exts.iter().any(|&e| e.eq_ignore_ascii_case(ext)))
+                .unwrap_or(false)
+        })
         .map(|e| e.path().to_path_buf())
         .collect()
 }

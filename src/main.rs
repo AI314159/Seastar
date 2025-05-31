@@ -2,6 +2,7 @@ use std::process::{exit, Command};
 
 mod io;
 mod builder;
+mod language;
 
 fn main() {
     let config = io::load_config("Seastar.toml");

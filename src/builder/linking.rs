@@ -11,8 +11,10 @@ pub fn link_objects(compiler: &str, objects: &[PathBuf], output: &PathBuf, link_
     for obj in objects {
         cmd.arg(obj);
     }
-    for flag in link_flags.split(' ') {
-        cmd.arg(flag);
+    for flag in link_flags.split_whitespace() {
+        if !flag.is_empty() {
+            cmd.arg(flag);
+        }
     }
     cmd.arg("-o").arg(output);
 

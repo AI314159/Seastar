@@ -4,65 +4,89 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::SystemTime;
 
-fn is_rebuild_required(c_file: &Path, obj_file: &Path) -> bool {
+pub struct LanguageBuilder<'a> {
+    pub name: &'a str,
+    pub extensions: &'a [&'a str],
+    pub compiler: &'a str,
+    pub include_flag: Option<&'a str>, // e.g., "-I"
+    pub compile_flags: &'a str,
+}
+
+fn is_rebuild_required(src_file: &Path, obj_file: &Path) -> bool {
     if !obj_file.exists() {
         return true;
     }
-    let c_meta = fs::metadata(c_file).ok();
-    let o_meta = fs::metadata(obj_file).ok();
-    if let (Some(c_m), Some(o_m)) = (c_meta, o_meta) {
-        let c_time = c_m.modified().unwrap_or(SystemTime::UNIX_EPOCH);
+    let src_meta = fs::metadata(src_file).ok();
+    let obj_meta = fs::metadata(obj_file).ok();
+    if let (Some(s_m), Some(o_m)) = (src_meta, obj_meta) {
+        let s_time = s_m.modified().unwrap_or(SystemTime::UNIX_EPOCH);
         let o_time = o_m.modified().unwrap_or(SystemTime::UNIX_EPOCH);
-        return c_time > o_time;
+        return s_time > o_time;
     }
     true
 }
 
-pub fn compile_c_files(
-    compiler: &str,
-    c_files: &[PathBuf],
+pub fn compile_files(
+    lang: &LanguageBuilder,
+    src_files: &[PathBuf],
     obj_dir: &Path,
-    include_dir: &str,
-    c_flags: &str,
+    include_dir: Option<&str>,
 ) -> Vec<PathBuf> {
     fs::create_dir_all(obj_dir).expect("Failed to create object directory");
 
-    let pb = ProgressBar::new(c_files.len() as u64);
+    let pb = ProgressBar::new(src_files.len() as u64);
     pb.set_style(
-        ProgressStyle::with_template("[{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} {msg}")
-            .unwrap()
-            .progress_chars("=> "),
+        ProgressStyle::with_template(&format!(
+            "[{{elapsed_precise}}] [{{bar:40.cyan/blue}}] {{pos}}/{{len}} ({}: {{msg}})",
+            lang.name
+        ))
+        .unwrap()
+        .progress_chars("=> "),
     );
 
     let mut objects = vec![];
-    for c_file in c_files {
-        let obj_path = obj_dir.join(
-            c_file
-                .file_stem()
-                .unwrap()
-                .to_string_lossy()
-                .to_string()
-                + ".o"
-            );
+    for src_file in src_files {
+        let stem = src_file
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown");
+        let ext = src_file.extension().and_then(|s| s.to_str()).unwrap_or("");
+        let obj_name = format!("{}.{}.o", stem, ext);
+        let obj_path = obj_dir.join(obj_name);
 
-        if is_rebuild_required(c_file, &obj_path) {
-            pb.set_message(format!("Compiling {}", c_file.display()));
+        let matches_lang = src_file.extension().is_some_and(|e| {
+            lang.extensions
+                .iter()
+                .any(|ext| e.eq_ignore_ascii_case(*ext))
+        });
+        if !matches_lang {
+            continue;
+        }
 
-            let mut cmd = Command::new(compiler);
-            cmd.arg("-I".to_owned() + include_dir);
-            for flag in c_flags.split(' ') {
-                cmd.arg(flag);
+        if is_rebuild_required(src_file, &obj_path) {
+            pb.set_message(format!("Compiling {}", src_file.display()));
+
+            let mut cmd = Command::new(lang.compiler);
+
+            if let (Some(flag), Some(inc)) = (lang.include_flag, include_dir) {
+                cmd.arg(format!("{}{}", flag, inc));
             }
-            cmd.arg("-c").arg(c_file).arg("-o").arg(&obj_path);
+
+            for flag in lang.compile_flags.split_whitespace() {
+                if !flag.is_empty() {
+                    cmd.arg(flag);
+                }
+            }
+            cmd.arg("-c").arg(src_file).arg("-o").arg(&obj_path);
 
             let status = cmd.status().expect("Failed to run compiler");
 
             if !status.success() {
                 pb.finish_and_clear();
-                panic!("Compilation failed for {:?}", c_file);
+                panic!("Compilation failed for {:?}", src_file);
             }
         } else {
-            pb.set_message(format!("Cached    {}", c_file.display()));
+            pb.set_message(format!("Cached    {}", src_file.display()));
         }
 
         objects.push(obj_path);
