@@ -21,7 +21,7 @@ you want to get updates, you can watch this repository.
 * [X] Incremental builds: The entire program shouldn't be recompiled every time a single file is changed.
 * [X] Custom compiler flags: The programmer should be able to customize the compiler flags through `Seastar.toml` without needing to change the build/run commands.
 * [ ] Parallel builds: Compiling in parallel is faster and more efficient.
-* [ ] C++ support: Seastar should be able to compile and link C++ without changing options or difficult configuration.
+* [X] C++ support: Seastar should be able to compile and link C++ without changing options or difficult configuration.
 * [ ] Rust support: Seastar should be able to compile and link Rust without changing options or difficult configuration.
 * [ ] Easy template generation: We should be able to create templates with a single command, e.g. `seastar init --lang c`
 * [ ] *Unified package manager: a difficult goal, but it should be easy to install packages for C, C++, and Rust neatly and natively to Seastar.*
