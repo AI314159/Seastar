@@ -13,3 +13,5 @@ compiler = "clang"
 c_flags = "-Wall -Wextra -O2"
 
 # If we wanted to change the link flags, you would do: `link_flags = ""`
+
+[dependencies]

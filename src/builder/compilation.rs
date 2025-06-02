@@ -30,7 +30,7 @@ pub fn compile_files(
     lang: &LanguageBuilder,
     src_files: &[PathBuf],
     obj_dir: &Path,
-    include_dir: Option<&str>,
+    include_dirs: &[PathBuf],
 ) -> Vec<PathBuf> {
     fs::create_dir_all(obj_dir).expect("Failed to create object directory");
 
@@ -67,9 +67,20 @@ pub fn compile_files(
             pb.set_message(format!("Compiling {}", src_file.display()));
 
             let mut cmd = Command::new(lang.compiler);
+            let include_flags = include_dirs
+                .iter()
+                .filter(|p| p.exists())
+                .map(|p| {
+                    format!(
+                        "{}{}",
+                        lang.include_flag.unwrap_or("-I"),
+                        p.to_str().unwrap()
+                    )
+                })
+                .collect::<Vec<_>>();
 
-            if let (Some(flag), Some(inc)) = (lang.include_flag, include_dir) {
-                cmd.arg(format!("{}{}", flag, inc));
+            for flag in include_flags {
+                cmd.arg(flag);
             }
 
             for flag in lang.compile_flags.split_whitespace() {
@@ -80,7 +91,7 @@ pub fn compile_files(
             cmd.arg("-c").arg(src_file).arg("-o").arg(&obj_path);
 
             let status = cmd.status().expect("Failed to run compiler");
-
+            println!("{:?}", cmd);
             if !status.success() {
                 pb.finish_and_clear();
                 panic!("Compilation failed for {:?}", src_file);

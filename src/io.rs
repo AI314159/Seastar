@@ -1,13 +1,21 @@
 use serde::Deserialize;
-use std::{fs, path::PathBuf};
+use std::{collections::HashMap, fs, path::PathBuf};
+
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
     pub project_name: String,
     pub compiler: String,
+
+    #[serde(default)]
+    pub is_library: bool,
+
     #[serde(default)]
     pub cpp_compiler: Option<String>,
     pub options: Options,
+
+    #[serde(default)]
+    pub dependencies: HashMap<String, DepSpec>,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -21,6 +29,17 @@ pub struct Options {
     pub cpp_flags: Option<String>,
     #[serde(default)]
     pub cpp_link_flags: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(untagged)]
+pub enum DepSpec {
+    Simple(String),
+    Detailed {
+        git: Option<String>,
+        tag: Option<String>,
+        path: Option<String>,
+    }
 }
 
 pub fn load_config<P: Into<PathBuf>>(path: P) -> Config {
