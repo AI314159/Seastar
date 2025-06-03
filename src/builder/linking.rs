@@ -55,7 +55,7 @@ pub fn link_objects(
             }
         }
         cmd.arg("-o").arg(output);
-        println!("COMMAND: {:?}", cmd);
+
         let status = cmd.status().expect("Failed to run linker");
         pb.finish_with_message("Linking complete");
 

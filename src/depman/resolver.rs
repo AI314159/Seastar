@@ -1,4 +1,7 @@
-use std::{collections::{HashMap, HashSet}, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+};
 
 use crate::io::{Config, DepSpec};
 
@@ -56,15 +59,13 @@ pub fn parse_deps(config: &Config) -> Vec<Dep> {
         }
     }
 
-    for dep in &deps {
-        println!("Dep: {:?}", dep);
-    }
-
     deps
 }
 
 pub fn resolve_and_fetch(deps: &[Dep], dep_dir: &str) -> DepGraph {
-    let mut graph = DepGraph { nodes: HashMap::new() };
+    let mut graph = DepGraph {
+        nodes: HashMap::new(),
+    };
     let mut visited = HashSet::new();
 
     for dep in deps {
@@ -87,7 +88,7 @@ fn resolve_dep_recursive(
 
     fetch(dep, dep_dir);
 
-    let dep_config = load_dep_config(dep, dep_dir); 
+    let dep_config = load_dep_config(dep, dep_dir);
     println!("{:?}", dep_config);
     let child_deps = parse_deps(&dep_config);
 
@@ -97,10 +98,13 @@ fn resolve_dep_recursive(
         resolve_dep_recursive(child, dep_dir, graph, visited);
     }
 
-    graph.nodes.insert(dep.name.clone(), DepNode {
-        dep: dep.clone(),
-        dependencies,
-    });
+    graph.nodes.insert(
+        dep.name.clone(),
+        DepNode {
+            dep: dep.clone(),
+            dependencies,
+        },
+    );
 }
 
 fn load_dep_config(dep: &Dep, dep_dir: &str) -> Config {
@@ -111,15 +115,16 @@ fn load_dep_config(dep: &Dep, dep_dir: &str) -> Config {
 fn fetch(dep: &Dep, dep_dir: &str) {
     match &dep.source {
         DepSource::Git { repo, tag } => {
+            println!("Would clone {} at tag {}", repo, tag.clone().unwrap_or("None".to_string()));
             todo!("Not implemented");
+
             // TODO: Working
         }
         DepSource::Path(path) => {
-            println!("Copying local dependency from: {}", path);
             let src = Path::new(path);
             let dst = Path::new(dep_dir).join(&dep.name);
             match super::fs_copy::copy_dir_recursive(src, &dst) {
-                Ok(_) => println!("Copied {} to {:?}", path, dst),
+                Ok(_) => {}
                 Err(e) => eprintln!("Failed to copy {}: {}", path, e),
             }
         }

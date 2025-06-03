@@ -1,6 +1,6 @@
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub fn copy_dir_recursive(src: &Path, dst: &Path) -> io::Result<()> {
     if !dst.exists() {

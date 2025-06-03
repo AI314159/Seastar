@@ -91,7 +91,7 @@ pub fn compile_files(
             cmd.arg("-c").arg(src_file).arg("-o").arg(&obj_path);
 
             let status = cmd.status().expect("Failed to run compiler");
-            println!("{:?}", cmd);
+
             if !status.success() {
                 pb.finish_and_clear();
                 panic!("Compilation failed for {:?}", src_file);

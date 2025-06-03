@@ -2,10 +2,13 @@ mod compilation;
 mod linking;
 
 use crate::{
-    depman::{self, resolver::{parse_deps, resolve_and_fetch, Dep}},
+    depman::{
+        self,
+        resolver::{Dep, parse_deps, resolve_and_fetch},
+    },
     io,
 };
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use compilation::LanguageBuilder;
 
@@ -20,8 +23,12 @@ fn build_deps(deps: &[Dep]) -> Vec<PathBuf> {
         let src_headers = PathBuf::from(&dep_path).join("external_headers");
         let dst_headers = PathBuf::from("deps").join("headers").join(dep_name);
         if src_headers.exists() {
-            println!("Copying headers from {:?} to {:?}", src_headers, dst_headers);
-            depman::fs_copy::copy_dir_recursive(&src_headers, &dst_headers);
+            println!(
+                "Copying headers from {:?} to {:?}",
+                src_headers, dst_headers
+            );
+            depman::fs_copy::copy_dir_recursive(&src_headers, &dst_headers)
+                .expect("Failed to copy headers");
         }
 
         let dep_src = PathBuf::from(&dep_path).join("src");
@@ -93,16 +100,9 @@ pub fn build(config: &io::Config, source_dir: &str, obj_dir: &str, output_dir: &
             PathBuf::from("deps").join("headers"),
             PathBuf::from("include"),
         ];
-        let include_dirs_str = include_dirs
-            .iter()
-            .filter(|p| p.exists())
-            .map(|p| format!("-I{}", p.to_str().unwrap()))
-            .collect::<Vec<_>>()
-            .join(" ");
-        println!("DIRECTORY!!! {}", &include_dirs_str);
+
         if !src_files.is_empty() {
-            let objects =
-                compilation::compile_files(lang, &src_files, &obj_dir, &include_dirs);
+            let objects = compilation::compile_files(lang, &src_files, &obj_dir, &include_dirs);
             all_objects.extend(objects);
         }
     }
@@ -131,7 +131,7 @@ pub fn build(config: &io::Config, source_dir: &str, obj_dir: &str, output_dir: &
     } else {
         PathBuf::from(output_dir).join(&config.project_name)
     };
-    println!("{:?}", dep_statics);
+
     all_objects.extend_from_slice(&dep_statics);
     linking::link_objects(
         linker,

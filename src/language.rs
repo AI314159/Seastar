@@ -4,6 +4,7 @@ use std::path::PathBuf;
 // This trait is for any buildable language. Making it this way
 // is a little annoying right now, but I think it will help
 // later on when I am adding Rust support. We'll see.
+#[allow(dead_code)]
 pub trait Language {
     fn name(&self) -> &'static str;
     fn file_extensions(&self) -> &[&'static str];
