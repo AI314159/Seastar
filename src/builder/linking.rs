@@ -13,7 +13,7 @@ pub fn link_objects(
     pb.enable_steady_tick(Duration::new(0, 50_000_000));
 
     if *is_library {
-        let mut cmd = Command::new("ar"); // TODO: configurable
+        let mut cmd = Command::new("ar");
         cmd.arg("rcs");
         cmd.arg(output);
 

@@ -37,20 +37,63 @@ fn build_deps(deps: &[Dep]) -> Vec<PathBuf> {
 
         let dep_src_files =
             io::get_source_files(dep_src.to_str().unwrap(), &["c", "cpp", "cc", "cxx", "c++"]);
+
         if !dep_src_files.is_empty() {
-            let dep_objects = compilation::compile_files(
-                &LanguageBuilder {
-                    name: "C",
-                    extensions: &["c"],
-                    compiler: "gcc",
-                    include_flag: Some("-I"),
-                    compile_flags: "",
-                },
-                &dep_src_files,
-                &dep_obj_dir,
-                &[PathBuf::from("deps/headers")],
-            );
-            linking::link_objects("ar", &dep_objects, &dep_lib, &true, "");
+            let mut objects = Vec::new();
+
+            let c_files: Vec<_> = dep_src_files
+                .iter()
+                .filter(|f| {
+                    f.extension()
+                        .and_then(|e| e.to_str())
+                        .map(|ext| ext == "c")
+                        .unwrap_or(false)
+                })
+                .cloned()
+                .collect();
+
+            if !c_files.is_empty() {
+                objects.extend(compilation::compile_files(
+                    &LanguageBuilder {
+                        name: "C",
+                        extensions: &["c"],
+                        compiler: "gcc",
+                        include_flag: Some("-I"),
+                        compile_flags: "",
+                    },
+                    &c_files,
+                    &dep_obj_dir,
+                    &[PathBuf::from("deps/headers")],
+                ));
+            }
+
+            let cpp_files: Vec<_> = dep_src_files
+                .iter()
+                .filter(|f| {
+                    f.extension()
+                        .and_then(|e| e.to_str())
+                        .map(|ext| ["cpp", "cc", "cxx", "c++"].contains(&ext))
+                        .unwrap_or(false)
+                })
+                .cloned()
+                .collect();
+
+            if !cpp_files.is_empty() {
+                objects.extend(compilation::compile_files(
+                    &LanguageBuilder {
+                        name: "C++",
+                        extensions: &["cpp", "cc", "cxx", "c++"],
+                        compiler: "g++",
+                        include_flag: Some("-I"),
+                        compile_flags: "",
+                    },
+                    &cpp_files,
+                    &dep_obj_dir,
+                    &[PathBuf::from("deps/headers")],
+                ));
+            }
+
+            linking::link_objects("ar", &objects, &dep_lib, &true, "");
             dep_static_libs.push(dep_lib);
         }
     }
