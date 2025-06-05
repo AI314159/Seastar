@@ -4,6 +4,17 @@ use std::{collections::HashMap, fs, path::PathBuf};
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
+    #[serde(default)]
+    pub package: Package,
+
+    pub options: Options,
+
+    #[serde(default)]
+    pub dependencies: HashMap<String, DepSpec>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct Package {
     pub project_name: String,
     pub compiler: String,
 
@@ -12,10 +23,6 @@ pub struct Config {
 
     #[serde(default)]
     pub cpp_compiler: Option<String>,
-    pub options: Options,
-
-    #[serde(default)]
-    pub dependencies: HashMap<String, DepSpec>,
 }
 
 #[derive(Debug, Deserialize, Default)]

@@ -38,7 +38,7 @@ impl Language for CLang {
     }
 
     fn compiler(&self, config: &Config) -> String {
-        config.compiler.clone()
+        config.package.compiler.clone()
     }
     fn compile_flags(&self, options: &Options) -> String {
         options.c_flags.clone()
@@ -60,7 +60,7 @@ impl Language for CppLang {
 
     fn compiler(&self, config: &Config) -> String {
         config
-            .cpp_compiler
+            .package.cpp_compiler
             .clone()
             .unwrap_or("g++".to_string())
     }

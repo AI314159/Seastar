@@ -111,14 +111,14 @@ pub fn build(config: &io::Config, source_dir: &str, obj_dir: &str, output_dir: &
         LanguageBuilder {
             name: "C",
             extensions: &["c"],
-            compiler: &config.compiler,
+            compiler: &config.package.compiler,
             include_flag: Some("-I"),
             compile_flags: &config.options.c_flags,
         },
         LanguageBuilder {
             name: "C++",
             extensions: &["cpp", "cc", "cxx", "c++"],
-            compiler: config.cpp_compiler.as_deref().unwrap_or("g++"),
+            compiler: config.package.cpp_compiler.as_deref().unwrap_or("g++"),
             include_flag: Some("-I"),
             compile_flags: config.options.cpp_flags.as_deref().unwrap_or(""),
         },
@@ -157,9 +157,9 @@ pub fn build(config: &io::Config, source_dir: &str, obj_dir: &str, output_dir: &
             .unwrap_or(false)
     });
     let linker = if is_any_cpp {
-        config.cpp_compiler.as_deref().unwrap_or("g++")
+        config.package.cpp_compiler.as_deref().unwrap_or("g++")
     } else {
-        &config.compiler
+        &config.package.compiler
     };
     let link_flags = if is_any_cpp {
         config.options.cpp_link_flags.as_deref().unwrap_or("")
@@ -167,12 +167,12 @@ pub fn build(config: &io::Config, source_dir: &str, obj_dir: &str, output_dir: &
         &config.options.link_flags
     };
 
-    let output_path = if config.is_library {
+    let output_path = if config.package.is_library {
         PathBuf::from(output_dir)
-            .join(&config.project_name)
+            .join(&config.package.project_name)
             .with_extension("a")
     } else {
-        PathBuf::from(output_dir).join(&config.project_name)
+        PathBuf::from(output_dir).join(&config.package.project_name)
     };
 
     all_objects.extend_from_slice(&dep_statics);
@@ -180,7 +180,7 @@ pub fn build(config: &io::Config, source_dir: &str, obj_dir: &str, output_dir: &
         linker,
         &all_objects,
         &output_path,
-        &config.is_library,
+        &config.package.is_library,
         link_flags,
     );
 

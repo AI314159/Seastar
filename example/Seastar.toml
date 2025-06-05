@@ -1,6 +1,7 @@
 # Configuration file.
 # Pretty simple at the moment, but should get a lot better soon.
 
+[package]
 # Project name has effect only on the name of the generated binary
 project_name = "example"
 
