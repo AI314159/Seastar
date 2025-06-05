@@ -1,31 +1,36 @@
-use std::process::{exit, Command};
+use clap::{Parser, Subcommand};
 
 mod io;
 mod builder;
 mod language;
 mod depman;
+mod app;
+
+#[derive(Parser)]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Build the binary/static library
+    Build,
+
+    /// Build and run the binary
+    Run,
+
+    /// Clean compiled dependencies and object files
+    Clean,
+}
 
 fn main() {
-    let config = io::load_config("Seastar.toml");
+    let cli = Cli::parse();
 
-
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() > 1 {
-        if args[1] == "build" {
-            let output_path = builder::build(&config, "src", "target/obj", "target");
-            println!("Successfully built to {}.", output_path);
-        }
-        if args[1] == "run" {
-            let output_path = builder::build(&config, "src", "target/obj", "target");
-
-            let status = Command::new(output_path)
-                .status()
-                .expect(
-                    "Failed to run program. Maybe try running it manually?"
-                );
-            if !status.success() {
-                exit(status.code().unwrap_or(0));
-            }
-        }
+    match &cli.command {
+        Some(Commands::Build) => app::build(),
+        Some(Commands::Run) => app::run(),
+        Some(Commands::Clean) => app::clean(),
+        None => println!("Commands: build, run"),
     }
 }

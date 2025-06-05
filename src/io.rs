@@ -50,7 +50,13 @@ pub enum DepSpec {
 }
 
 pub fn load_config<P: Into<PathBuf>>(path: P) -> Config {
-    let data = fs::read_to_string(path.into()).expect("Failed to read config");
+    let data = match fs::read_to_string(path.into()) {
+        Ok(data) => data,
+        Err(_) => {
+            println!("Failed to read config file!");
+            std::process::exit(1);
+        },
+    };
     toml::from_str(&data).expect("Failed to parse TOML")
 }
 
