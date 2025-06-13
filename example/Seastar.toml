@@ -16,3 +16,4 @@ c_flags = "-Wall -Wextra -O2"
 # If we wanted to change the link flags, you would do: `link_flags = ""`
 
 [dependencies]
+seastar_pkg = { git = "https://github.com/AI314159/seastar-test" }

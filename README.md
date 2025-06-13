@@ -1,7 +1,7 @@
 # Seastar
-Seastar is a fast, extensible build system for C, and soon, C++ and Rust as well.
+Seastar is a fast, extensible build system for C, C++, and maybe soon, Rust and Zig as well.
 I believe that it should be easy to make, prototype, and iterate upon designs.
-However, C is still one of our most widely used languages, but it makes it hard to create
+While C is still one of our most widely used languages, it makes it hard to create
 programs easily, especially for beginners. Instead, Seastar aims to be more like
 Rust's tooling with `cargo`, but supporting seamless compilation across more languages.
 
@@ -23,7 +23,7 @@ you want to get updates, you can watch this repository.
 * [ ] Parallel builds: Compiling in parallel is faster and more efficient.
 * [X] C++ support: Seastar should be able to compile and link C++ without changing options or difficult configuration.
 * [ ] Rust support: Seastar should be able to compile and link Rust without changing options or difficult configuration.
-* [ ] Easy template generation: We should be able to create templates with a single command, e.g. `seastar init --lang c`
+* [X] Easy template generation: We should be able to create templates with a single command, e.g. `seastar init --lang c`
 * [ ] *Unified package manager: a difficult goal, but it should be easy to install packages for C, C++, and Rust neatly and natively to Seastar.*
 
 If you find this project cool and want to see more , please consider leaving a star!

@@ -3,7 +3,28 @@ use std::{
     path::Path,
 };
 
+use git2::Repository;
 use crate::io::{Config, DepSpec};
+
+const PACKAGE_CACHE_DIR: &str = "~/.seastar/package_cache/git_clones";
+
+fn ensure_cache_dir() -> std::path::PathBuf {
+    let expanded_cache = shellexpand::tilde(PACKAGE_CACHE_DIR).to_string();
+    let cache_path = Path::new(&expanded_cache);
+    if !cache_path.exists() {
+        std::fs::create_dir_all(cache_path).expect("Failed to create package cache directory");
+    }
+    cache_path.to_path_buf()
+}
+
+fn get_cached_package_path(repo: &str, tag: Option<&str>) -> std::path::PathBuf {
+    let repo_hash = format!("{:x}", md5::compute(repo));
+    let mut cache_name = repo_hash;
+    if let Some(tag) = tag {
+        cache_name = format!("{}-{}", cache_name, tag);
+    }
+    ensure_cache_dir().join(cache_name)
+}
 
 #[derive(Debug, Clone)]
 pub enum DepSource {
@@ -115,10 +136,55 @@ fn load_dep_config(dep: &Dep, dep_dir: &str) -> Config {
 fn fetch(dep: &Dep, dep_dir: &str) {
     match &dep.source {
         DepSource::Git { repo, tag } => {
-            println!("Would clone {} at tag {}", repo, tag.clone().unwrap_or("None".to_string()));
-            todo!("Not implemented");
+            let dst = Path::new(dep_dir).join(&dep.name);
+            let cache_path = get_cached_package_path(repo, tag.as_deref());
+            
+            if !cache_path.exists() {
+                println!("Cloning {} to cache...", repo);
 
-            // TODO: Working
+                let repo = match Repository::clone(repo, &cache_path) {
+                    Ok(repo) => repo,
+                    Err(e) => {
+                        eprintln!("Failed to clone repository {}: {}", repo, e);
+                        return;
+                    }
+                };
+
+                if let Some(tag) = tag {
+                    let obj = match repo.revparse_single(&format!("refs/tags/{}", tag)) {
+                        Ok(obj) => obj,
+                        Err(e) => {
+                            eprintln!("Failed to find tag {}: {}", tag, e);
+                            return;
+                        }
+                    };
+
+                    let branch_name = format!("seastar/{}", tag);
+                    match repo.branch(&branch_name, &obj.peel_to_commit().unwrap(), true) {
+                        Ok(_) => (),
+                        Err(e) => {
+                            eprintln!("Failed to create branch from tag {}: {}", tag, e);
+                            return;
+                        }
+                    };
+
+                    let mut head = repo.head().unwrap();
+                    head.set_target(obj.id(), "checkout tag").unwrap();
+                    repo.set_head(&format!("refs/heads/{}", branch_name)).unwrap();
+                    repo.checkout_head(Some(git2::build::CheckoutBuilder::new().force())).unwrap();
+                }
+            } else {
+                println!("Using cached copy of {}", repo);
+            }
+
+            if !dst.exists() {
+                std::fs::create_dir_all(&dst).expect("Failed to create destination directory");
+            }
+
+            match super::fs_copy::copy_dir_recursive(&cache_path, &dst) {
+                Ok(_) => {}
+                Err(e) => eprintln!("Failed to copy from cache to destination: {}", e),
+            }
         }
         DepSource::Path(path) => {
             let src = Path::new(path);

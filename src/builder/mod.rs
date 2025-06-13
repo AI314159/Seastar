@@ -41,6 +41,15 @@ fn build_deps(deps: &[Dep]) -> Vec<PathBuf> {
         if !dep_src_files.is_empty() {
             let mut objects = Vec::new();
 
+            let mut include_dirs = vec![
+                PathBuf::from(&dep_path).join("include"),
+                PathBuf::from(&dep_path).join("external_headers"),
+            ];
+            
+            for dep in &dep_node.dependencies {
+                include_dirs.push(PathBuf::from("deps/headers").join(dep));
+            }
+
             let c_files: Vec<_> = dep_src_files
                 .iter()
                 .filter(|f| {
@@ -63,7 +72,7 @@ fn build_deps(deps: &[Dep]) -> Vec<PathBuf> {
                     },
                     &c_files,
                     &dep_obj_dir,
-                    &[PathBuf::from("deps/headers")],
+                    &include_dirs,
                 ));
             }
 
@@ -89,14 +98,18 @@ fn build_deps(deps: &[Dep]) -> Vec<PathBuf> {
                     },
                     &cpp_files,
                     &dep_obj_dir,
-                    &[PathBuf::from("deps/headers")],
+                    &include_dirs,
                 ));
             }
 
             linking::link_objects("ar", &objects, &dep_lib, &true, "");
+        }
+
+        if dep_lib.exists() {
             dep_static_libs.push(dep_lib);
         }
     }
+
     dep_static_libs
 }
 
