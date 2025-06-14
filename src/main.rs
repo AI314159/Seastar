@@ -60,7 +60,14 @@ fn main() {
 
     match &cli.command {
         Some(Commands::Build) => app::build(),
-        Some(Commands::Run) => app::run(),
+        Some(Commands::Run) => {
+            let config = io::load_config("Seastar.toml");
+            if config.package.is_lib {
+                eprintln!("Error: Cannot run a library package");
+                exit(1);
+            }
+            app::run()
+        }
         Some(Commands::Clean) => app::clean(),
         Some(Commands::New {
             project_name,

@@ -180,7 +180,7 @@ pub fn build(config: &io::Config, source_dir: &str, obj_dir: &str, output_dir: &
         &config.options.link_flags
     };
 
-    let output_path = if config.package.is_library {
+    let output_path = if config.package.is_lib {
         PathBuf::from(output_dir)
             .join(&config.package.project_name)
             .with_extension("a")
@@ -193,7 +193,7 @@ pub fn build(config: &io::Config, source_dir: &str, obj_dir: &str, output_dir: &
         linker,
         &all_objects,
         &output_path,
-        &config.package.is_library,
+        &config.package.is_lib,
         link_flags,
     );
 

@@ -19,7 +19,7 @@ pub struct Package {
     pub compiler: String,
 
     #[serde(default)]
-    pub is_library: bool,
+    pub is_lib: bool,
 
     #[serde(default)]
     pub cpp_compiler: Option<String>,
